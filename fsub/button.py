@@ -1,10 +1,12 @@
-from fsub.config import FORCE_SUB_, BUTTON_ROW, BUTTON_TITLE
+from fsub.config import BUTTON_ROW
+from fsub.force import get_all_fsubs, get_join_button_title
 
 from hydrogram.types import InlineKeyboardButton
 
 
 async def start_button(client):
-    if not FORCE_SUB_:
+    all_fsubs = get_all_fsubs()
+    if not all_fsubs:
         buttons = [
             [
                 InlineKeyboardButton(text="Bantuan anjing", callback_data="help"),
@@ -15,9 +17,8 @@ async def start_button(client):
 
     dynamic_button = []
     current_row = []
-    for key in FORCE_SUB_.keys():
-        chat_id = FORCE_SUB_[key]
-        current_row.append(InlineKeyboardButton(text=f"{BUTTON_TITLE} {key}", url=getattr(client, f'invitelink{key}')))
+    for key in all_fsubs.keys():
+        current_row.append(InlineKeyboardButton(text=f"{get_join_button_title()} {key}", url=getattr(client, f'invitelink{key}')))
         if len(current_row) == BUTTON_ROW:
             dynamic_button.append(current_row)
             current_row = []
@@ -36,12 +37,12 @@ async def start_button(client):
 
 
 async def fsub_button(client, message):
-    if FORCE_SUB_:
+    all_fsubs = get_all_fsubs()
+    if all_fsubs:
         dynamic_button = []
         current_row = []
-        for key in FORCE_SUB_.keys():
-            chat_id = FORCE_SUB_[key]
-            current_row.append(InlineKeyboardButton(text=f"{BUTTON_TITLE} {key}", url=getattr(client, f'invitelink{key}')))
+        for key in all_fsubs.keys():
+            current_row.append(InlineKeyboardButton(text=f"{get_join_button_title()} {key}", url=getattr(client, f'invitelink{key}')))
             if len(current_row) == BUTTON_ROW:
                 dynamic_button.append(current_row)
                 current_row = []

@@ -8,7 +8,6 @@ from fsub.config import (
     ADMINS,
     CUSTOM_CAPTION,
     DISABLE_BUTTON,
-    FORCE_MESSAGE,
     RESTRICT,
     START_MESSAGE,
 )
@@ -26,6 +25,8 @@ from fsub.func import(
 )
 
 from fsub.button import fsub_button, start_button
+from fsub.credit import with_credit
+from fsub.force import get_force_message_template
 
 START_TIME = datetime.utcnow()
 START_TIME_ISO = START_TIME.replace(microsecond=0).isoformat()
@@ -145,7 +146,7 @@ async def start_command(client: Bot, message: Message):
 async def not_joined(client: Bot, message: Message):
     buttons = await fsub_button(client, message)
     await message.reply(
-        text=FORCE_MESSAGE.format(
+        text=with_credit(get_force_message_template().format(
             first=message.from_user.first_name,
             last=message.from_user.last_name,
             username=f"@{message.from_user.username}"
@@ -153,7 +154,7 @@ async def not_joined(client: Bot, message: Message):
             else None,
             mention=message.from_user.mention,
             id=message.from_user.id,
-        ),
+        )),
         reply_markup=InlineKeyboardMarkup(buttons),
         quote=True,
         disable_web_page_preview=True,

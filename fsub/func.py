@@ -7,8 +7,9 @@ from hydrogram.enums import ChatMemberStatus
 from hydrogram.errors import FloodWait
 from hydrogram.errors.exceptions.bad_request_400 import UserNotParticipant
 
-from fsub.config import ADMINS, FORCE_SUB_, OWNERS
+from fsub.config import ADMINS, OWNERS
 from fsub.database import check_admin, full_admin
+from fsub.force import get_all_fsubs
 
 
 def is_owner_id(user_id: int) -> bool:
@@ -35,13 +36,17 @@ async def subscribed(filter, client, update):
     if is_admin_id(user_id):
         return True
 
-    for key, channel_id in FORCE_SUB_.items():
+    for channel_id in get_all_fsubs().values():
         try:
             member = await client.get_chat_member(chat_id=channel_id, user_id=user_id)
         except UserNotParticipant:
             return False
+        except Exception:
+            return False
+        if member.status not in [ChatMemberStatus.OWNER, ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.MEMBER]:
+            return False
 
-    return member.status in [ChatMemberStatus.OWNER, ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.MEMBER]
+    return True
 
 
 async def encode(string):

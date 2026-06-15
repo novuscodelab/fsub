@@ -4,10 +4,10 @@ import asyncio
 from hydrogram import Client
 from fsub.config import (
     CHANNEL_DB,
-    FORCE_SUB_,
     LOGGER,
     BOT_TOKEN,
 )
+from fsub.force import get_all_fsubs
 
 uvloop.install()
 
@@ -24,6 +24,29 @@ class Bot(Client):
         )
         self.LOGGER = LOGGER
 
+
+    async def refresh_fsub_invite_links(self, exit_on_error: bool = False):
+        for key, channel_id in get_all_fsubs().items():
+            try:
+                info = await self.get_chat(channel_id)
+                link = info.invite_link
+                if not link:
+                    link = await self.export_chat_invite_link(channel_id)
+                setattr(self, f"invitelink{key}", link)
+                self.LOGGER(__name__).info(
+                    f"FORCE_SUB_{key} Detected!\n"
+                    f"  Title: {info.title}\n"
+                    f"  Chat ID: {info.id}\n\n"
+                )
+            except Exception as e:
+                self.LOGGER(__name__).error(e)
+                self.LOGGER(__name__).error(
+                    f"Pastikan @{self.username} menjadi Admin di FORCE_SUB_{key} ({channel_id})\n\n"
+                )
+                if exit_on_error:
+                    sys.exit()
+                raise
+
     async def start(self):
         try:
             await super().start()
@@ -38,25 +61,7 @@ class Bot(Client):
             self.LOGGER(__name__).error(e)
             sys.exit()
 
-        for key, channel_id in FORCE_SUB_.items():
-            try:
-                info = await self.get_chat(channel_id)
-                link = info.invite_link
-                if not link:
-                    await self.export_chat_invite_link(channel_id)
-                    link = info.invite_link
-                setattr(self, f"invitelink{key}", link)
-                self.LOGGER(__name__).info(
-                    f"FORCE_SUB_{key} Detected!\n"
-                    f"  Title: {info.title}\n"
-                    f"  Chat ID: {info.id}\n\n"
-                )
-            except Exception as e:
-                self.LOGGER(__name__).error(e)
-                self.LOGGER(__name__).error(
-                    f"Pastikan @{self.username} menjadi Admin di FORCE_SUB_{key}\n\n"
-                )
-                sys.exit()
+        await self.refresh_fsub_invite_links(exit_on_error=True)
 
         try:
             db_channel = await self.get_chat(CHANNEL_DB)

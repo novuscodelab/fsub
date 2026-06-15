@@ -41,7 +41,8 @@ FORCE_MESSAGE = os.getenv(
     "\n\n"
     "Silakan Join Ke Channel dan Groupnya di Bawah Ini Terlebih Dahulu Yaa.",
     )
-ADMINS = [int(x) for x in (os.getenv("ADMINS").split())]
+ADMINS = [int(x) for x in (os.getenv("ADMINS", "").split()) if x]
+OWNERS = [int(x) for x in (os.getenv("OWNER", os.getenv("OWNERS", "")).split()) if x]
     
 CUSTOM_CAPTION = os.getenv("CUSTOM_CAPTION", None)
 DISABLE_BUTTON = os.getenv("DISABLE_BUTTON", False)

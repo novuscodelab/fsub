@@ -2,6 +2,7 @@ from fsub import Bot
 # --- PERUBAHAN: Import tambahan ---
 from fsub.config import ADMINS
 from fsub.database import get_talent
+from fsub.func import is_admin_id
 from hydrogram import filters
 # -----------------------------------
 from hydrogram.types import CallbackQuery, InlineKeyboardMarkup, Message
@@ -38,6 +39,8 @@ class Data:
 /deltalent (id): Hapus talent
 /tfcoin (id) (jml): Transfer koin ke user
 /revokevip (id_talent) (id_user): Cabut akses VIP member
+/addadmin (id): Owner menambahkan admin database
+/unadmin (id): Owner menurunkan admin database
 """
     # ----------------------------------------
 
@@ -72,7 +75,7 @@ class Data:
 async def help(client: Bot, message: Message):
     
     user_id = message.from_user.id
-    is_admin = user_id in ADMINS
+    is_admin = is_admin_id(user_id)
     is_talent = get_talent(user_id)
     
     # Tentukan pesan berdasarkan peran
@@ -114,7 +117,7 @@ async def handler(client: Bot, query: CallbackQuery):
     elif data == "help":
         # Logika yang sama dengan perintah /help harus diterapkan di sini
         user_id = query.from_user.id
-        is_admin = user_id in ADMINS
+        is_admin = is_admin_id(user_id)
         is_talent = get_talent(user_id)
         
         if is_admin:

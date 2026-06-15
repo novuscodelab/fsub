@@ -7,12 +7,32 @@ from hydrogram.enums import ChatMemberStatus
 from hydrogram.errors import FloodWait
 from hydrogram.errors.exceptions.bad_request_400 import UserNotParticipant
 
-from fsub.config import ADMINS, FORCE_SUB_
+from fsub.config import ADMINS, FORCE_SUB_, OWNERS
+from fsub.database import check_admin, full_admin
+
+
+def is_owner_id(user_id: int) -> bool:
+    return user_id in OWNERS
+
+def is_admin_id(user_id: int) -> bool:
+    return is_owner_id(user_id) or user_id in ADMINS or check_admin(user_id)
+
+def get_all_admin_ids():
+    return list(dict.fromkeys(OWNERS + ADMINS + full_admin()))
+
+async def admin_user(filter, client, update):
+    return bool(update.from_user and is_admin_id(update.from_user.id))
+
+async def owner_user(filter, client, update):
+    return bool(update.from_user and is_owner_id(update.from_user.id))
+
+admin_filter = filters.create(admin_user)
+owner_filter = filters.create(owner_user)
 
 
 async def subscribed(filter, client, update):
     user_id = update.from_user.id
-    if user_id in ADMINS:
+    if is_admin_id(user_id):
         return True
 
     for key, channel_id in FORCE_SUB_.items():

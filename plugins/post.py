@@ -5,7 +5,7 @@ from hydrogram.errors import FloodWait
 from hydrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 from fsub import Bot
-from fsub.config import ADMINS, CHANNEL_DB, DISABLE_BUTTON, LOGGER
+from fsub.config import ADMINS, CHANNEL_DB, LOGGER
 from fsub.func import admin_filter, encode
 
 
@@ -39,7 +39,8 @@ from fsub.func import admin_filter, encode
             "delsub",
             "listsub",
             "setforce",
-            "setjoin"
+            "setjoin",
+            "gitpull"
         ]
     )
 )
@@ -79,21 +80,17 @@ async def channel_post(client: Client, message: Message):
         disable_web_page_preview=True,
     )
 
-    if not DISABLE_BUTTON:
-        try:
-            await post_message.edit_reply_markup(reply_markup)
-        except FloodWait as e:
-            await asyncio.sleep(e.value)
-            await post_message.edit_reply_markup(reply_markup)
-        except Exception:
-            pass
+    try:
+        await post_message.edit_reply_markup(reply_markup)
+    except FloodWait as e:
+        await asyncio.sleep(e.value)
+        await post_message.edit_reply_markup(reply_markup)
+    except Exception:
+        pass
 
 
 @Bot.on_message(filters.channel & filters.incoming & filters.chat(CHANNEL_DB))
 async def new_post(client: Client, message: Message):
-    if DISABLE_BUTTON:
-        return
-    
     converted_id = message.id * abs(client.db_channel.id)
     string = f"get-{converted_id}"
     base64_string = await encode(string)

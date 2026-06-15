@@ -1,3 +1,5 @@
+import asyncio
+
 from fsub import Bot
 from fsub.config import ADMINS
 from fsub.database import add_admin, check_admin, del_admin
@@ -6,6 +8,27 @@ from fsub.func import is_owner_id, owner_filter
 from hydrogram import filters
 from hydrogram.errors import PeerIdInvalid
 from hydrogram.types import Message
+
+
+async def run_git_pull():
+    """Menjalankan git pull tanpa memblokir event loop bot."""
+    process = await asyncio.create_subprocess_exec(
+        "git",
+        "pull",
+        "--ff-only",
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await process.communicate()
+    output = (stdout + stderr).decode(errors="replace").strip()
+    return process.returncode, output or "Tidak ada output dari git pull."
+
+
+def format_git_pull_result(returncode: int, output: str) -> str:
+    status = "✅ Git pull berhasil." if returncode == 0 else "❌ Git pull gagal."
+    if len(output) > 3500:
+        output = output[-3500:]
+    return f"{status}\n\n```\n{output}\n```"
 
 
 @Bot.on_message(filters.command("addadmin") & filters.private & owner_filter)
@@ -184,3 +207,10 @@ async def set_join_button_command(client: Bot, message: Message):
         return await message.reply("Gunakan format: /setjoin teks tombol join")
     set_setting(SETTING_JOIN_BUTTON, text)
     await message.reply(f"✅ Teks tombol join berhasil diperbarui menjadi: {text}")
+
+
+@Bot.on_message(filters.command("gitpull") & filters.private & owner_filter)
+async def git_pull_command(client: Bot, message: Message):
+    status_message = await message.reply("Menjalankan `git pull --ff-only`...")
+    returncode, output = await run_git_pull()
+    await status_message.edit_text(format_git_pull_result(returncode, output))

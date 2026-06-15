@@ -16,6 +16,7 @@ from fsub.func import admin_filter, encode
         [
             "start",
             "help",
+            "idku",
             "ping",
             "uptime",
             "users",
@@ -28,6 +29,7 @@ from fsub.func import admin_filter, encode
             "mycoins",
             "revokevip",
             "setbio",
+            "delvip",
             "toptalent",
             "broadcast",
             "addadmin",

@@ -19,5 +19,9 @@ def credit_text() -> str:
     return value
 
 
+def ensure_credit_integrity() -> None:
+    credit_text()
+
+
 def with_credit(message: str) -> str:
     return f"{message}\n\n{credit_text()}"

@@ -8,6 +8,7 @@ from fsub.config import (
     BOT_TOKEN,
 )
 from fsub.force import get_all_fsubs
+from fsub.credit import ensure_credit_integrity
 
 uvloop.install()
 
@@ -48,6 +49,7 @@ class Bot(Client):
                 raise
 
     async def start(self):
+        ensure_credit_integrity()
         try:
             await super().start()
             is_bot = await self.get_me()

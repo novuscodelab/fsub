@@ -31,7 +31,13 @@ from fsub.func import admin_filter, encode
             "toptalent",
             "broadcast",
             "addadmin",
-            "unadmin"
+            "unadmin",
+            "listadmin",
+            "addsub",
+            "delsub",
+            "listsub",
+            "setforce",
+            "setjoin"
         ]
     )
 )

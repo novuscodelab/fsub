@@ -103,7 +103,9 @@ async def start_command(client: Bot, message: Message):
 
             else:
                 caption = msg.caption.html if msg.caption else ""
-                reply_markup = msg.reply_markup if DISABLE_BUTTON else None
+            # Konten yang dikirim ke member tidak membawa tombol dari CHANNEL_DB,
+            # termasuk tombol "Bagikan Link" yang hanya dibutuhkan admin.
+            reply_markup = None
             try:
                 await msg.copy(
                     chat_id=message.from_user.id,
@@ -232,6 +234,10 @@ async def get_uptime(_, message: Message):
 async def idku_command(client: Bot, message: Message):
     user_id = message.from_user.id
     await message.reply(
-        f"User ID Anda adalah: `{user_id}`",
-        quote=True
+        "🪪 **ID Telegram Anda**\n\n"
+        f"• User ID: `{user_id}`\n"
+        f"• Nama: {message.from_user.mention}\n\n"
+        "Salin User ID ini jika admin/talent meminta ID Anda untuk bantuan, transfer koin, atau akses VIP.",
+        quote=True,
+        disable_web_page_preview=True,
     )

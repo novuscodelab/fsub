@@ -15,6 +15,7 @@ class Data:
     HELP_MEMBER = """
 /start: Mulai bot
 /help: Bantuan dan tentang bot
+/idku: Lihat User ID Telegram Anda
 /ping: Cek latensi bot
 /uptime: Cek waktu aktif bot
 /mycoins: Cek saldo koin Anda
@@ -41,6 +42,12 @@ class Data:
 /revokevip (id_talent) (id_user): Cabut akses VIP member
 /addadmin (id): Owner menambahkan admin database
 /unadmin (id): Owner menurunkan admin database
+/listadmin: Lihat daftar admin database
+/addsub (chat_id): Tambah channel/group force subscribe
+/delsub (chat_id): Hapus channel/group force subscribe
+/listsub: Lihat daftar force subscribe
+/setforce (teks): Ubah pesan force subscribe
+/setjoin (teks): Ubah teks tombol join
 """
     # ----------------------------------------
 
@@ -70,15 +77,10 @@ class Data:
 """
 
 
-# --- PERUBAHAN: Logika dinamis untuk /help ---
-@Bot.on_message(filters.private & filters.incoming & filters.command("help"))
-async def help(client: Bot, message: Message):
-    
-    user_id = message.from_user.id
+def build_help_text(user_id: int) -> str:
     is_admin = is_admin_id(user_id)
     is_talent = get_talent(user_id)
-    
-    # Tentukan pesan berdasarkan peran
+
     if is_admin:
         role_header = "🛠️ **Menu Bantuan Admin** 🛠️"
         help_text = Data.HELP_MEMBER + "\n" + Data.HELP_TALENT_ONLY + "\n" + Data.HELP_ADMIN_ONLY
@@ -88,9 +90,14 @@ async def help(client: Bot, message: Message):
     else:
         role_header = "👤 **Menu Bantuan Member** 👤"
         help_text = Data.HELP_MEMBER
-        
-    text = f"{role_header}\n{help_text}"
-    
+
+    return f"{role_header}\n{help_text}"
+
+
+@Bot.on_message(filters.private & filters.incoming & filters.command("help"))
+async def help(client: Bot, message: Message):
+    text = build_help_text(message.from_user.id)
+
     await client.send_message(
         message.chat.id, 
         text,
@@ -115,23 +122,8 @@ async def handler(client: Bot, query: CallbackQuery):
             pass
             
     elif data == "help":
-        # Logika yang sama dengan perintah /help harus diterapkan di sini
-        user_id = query.from_user.id
-        is_admin = is_admin_id(user_id)
-        is_talent = get_talent(user_id)
-        
-        if is_admin:
-            role_header = "🛠️ **Menu Bantuan Admin** 🛠️"
-            help_text = Data.HELP_MEMBER + "\n" + Data.HELP_TALENT_ONLY + "\n" + Data.HELP_ADMIN_ONLY
-        elif is_talent:
-            role_header = "⭐️ **Menu Bantuan Talent** ⭐️"
-            help_text = Data.HELP_MEMBER + "\n" + Data.HELP_TALENT_ONLY
-        else:
-            role_header = "👤 **Menu Bantuan Member** 👤"
-            help_text = Data.HELP_MEMBER
-            
-        text = f"{role_header}\n{help_text}"
-        
+        text = build_help_text(query.from_user.id)
+
         try:
             await query.message.edit_text(
                 text=text,

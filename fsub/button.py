@@ -9,8 +9,8 @@ async def start_button(client):
     if not all_fsubs:
         buttons = [
             [
-                InlineKeyboardButton(text="Bantuan anjing", callback_data="help"),
-                InlineKeyboardButton(text="Tutup anjing", callback_data="close"),
+                InlineKeyboardButton(text="Bantuan", callback_data="help"),
+                InlineKeyboardButton(text="Tutup", callback_data="close"),
             ],
         ]
         return buttons

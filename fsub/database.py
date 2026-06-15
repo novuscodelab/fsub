@@ -9,7 +9,32 @@ user_data = database['users']
 talent_data = database['talents']
 coin_data = database['user_coins']
 vip_purchases = database['vip_purchases']
+admin_data = database['admins']
 
+
+# --- Fungsi Admin Dinamis ---
+
+def add_admin(user_id: int):
+    """Menambahkan admin dinamis ke database."""
+    result = admin_data.update_one(
+        {'_id': user_id},
+        {'$set': {'_id': user_id}},
+        upsert=True
+    )
+    return result.upserted_id is not None or result.modified_count > 0
+
+def del_admin(user_id: int):
+    """Menghapus admin dinamis dari database."""
+    result = admin_data.delete_one({'_id': user_id})
+    return result.deleted_count > 0
+
+def check_admin(user_id: int):
+    """Memeriksa apakah user merupakan admin dinamis."""
+    return bool(admin_data.find_one({'_id': user_id}))
+
+def full_admin():
+    """Mengambil semua admin dinamis dari database."""
+    return [doc['_id'] for doc in admin_data.find()]
 
 # --- Fungsi User (Sudah Ada) ---
 

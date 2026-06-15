@@ -6,12 +6,12 @@ from hydrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 from fsub import Bot
 from fsub.config import ADMINS, CHANNEL_DB, DISABLE_BUTTON, LOGGER
-from fsub.func import encode
+from fsub.func import admin_filter, encode
 
 
 @Bot.on_message(
     filters.private
-    & filters.user(ADMINS)
+    & admin_filter
     & ~filters.command(
         [
             "start",
@@ -29,7 +29,9 @@ from fsub.func import encode
             "revokevip",
             "setbio",
             "toptalent",
-            "broadcast"
+            "broadcast",
+            "addadmin",
+            "unadmin"
         ]
     )
 )

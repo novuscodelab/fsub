@@ -2,6 +2,7 @@ import asyncio
 from fsub import Bot
 # --- PERUBAHAN: Tambahkan CHANNEL_DB dan FORCE_SUB_ ---
 from fsub.config import ADMINS, CHANNEL_DB, FORCE_SUB_ 
+from fsub.func import admin_filter, get_all_admin_ids, is_admin_id
 from fsub.database import (
     add_talent,
     del_talent,
@@ -37,7 +38,7 @@ BIO_LIMIT = 150
 
 # --- Perintah Admin ---
 
-@Bot.on_message(filters.command("addtalent") & filters.user(ADMINS))
+@Bot.on_message(filters.command("addtalent") & admin_filter)
 async def add_talent_command(client: Bot, message: Message):
     if len(message.command) < 2:
         return await message.reply("Gunakan format: /addtalent (user_id)")
@@ -60,7 +61,7 @@ async def add_talent_command(client: Bot, message: Message):
     await message.reply(f"✅ Sukses! **{name}** (`{user_id}`) telah ditambahkan sebagai talent.")
 
 
-@Bot.on_message(filters.command("deltalent") & filters.user(ADMINS))
+@Bot.on_message(filters.command("deltalent") & admin_filter)
 async def del_talent_command(client: Bot, message: Message):
     if len(message.command) < 2:
         return await message.reply("Gunakan format: /deltalent (user_id)")
@@ -76,7 +77,7 @@ async def del_talent_command(client: Bot, message: Message):
         await message.reply("Gagal menghapus talent dari database.")
 
 
-@Bot.on_message(filters.command("tfcoin") & filters.user(ADMINS))
+@Bot.on_message(filters.command("tfcoin") & admin_filter)
 async def transfer_coin_command(client: Bot, message: Message):
     if len(message.command) < 3:
         return await message.reply("Gunakan format: /tfcoin (user_id) (jumlah)")
@@ -101,7 +102,7 @@ async def transfer_coin_command(client: Bot, message: Message):
 
 # --- Perintah Admin BARU ---
 
-@Bot.on_message(filters.command("revokevip") & filters.user(ADMINS))
+@Bot.on_message(filters.command("revokevip") & admin_filter)
 async def revoke_vip_command(client: Bot, message: Message):
     """Admin mencabut akses VIP member dari channel talent."""
     if len(message.command) < 3:
@@ -297,7 +298,7 @@ async def rate_talent_command(client: Bot, message: Message):
     talent = get_talent(talent_id)
     if not talent:
         return await message.reply("User ID tersebut bukan talent terdaftar.")
-    is_admin = user_id in ADMINS
+    is_admin = is_admin_id(user_id)
     final_balance_text = ""
     if not is_admin:
         balance = get_coin_balance(user_id)
@@ -331,7 +332,7 @@ async def rate_talent_command(client: Bot, message: Message):
 @Bot.on_message(filters.command("mycoins") & filters.private)
 async def my_coins_command(client: Bot, message: Message):
     user_id = message.from_user.id
-    if user_id in ADMINS:
+    if is_admin_id(user_id):
         balance_text = "∞ (Tidak Terbatas)"
     else:
         balance = get_coin_balance(user_id)
@@ -364,7 +365,7 @@ async def handle_buy_vip_callback(client: Bot, query):
         return await query.answer(f"Error saat cek keanggotaan: {e}", show_alert=True)
     has_purchased_before = check_vip_purchase(user_id, talent_id)
     if not has_purchased_before:
-        is_admin = user_id in ADMINS
+        is_admin = is_admin_id(user_id)
         if not is_admin:
             balance = get_coin_balance(user_id)
             if balance < VIP_COST:
@@ -408,7 +409,7 @@ async def handle_buy_vip_callback(client: Bot, query):
                 f"⭐️ **Talent:** {talent_link} (`{talent_id}`)\n"
                 f"💰 **Harga:** {VIP_COST} 🪙"
             )
-            for admin_id in ADMINS:
+            for admin_id in get_all_admin_ids():
                 try:
                     await client.send_message(admin_id, notif_text, disable_web_page_preview=True)
                 except Exception:
@@ -438,7 +439,7 @@ async def handle_talent_post(client: Bot, message: Message):
         # return await message.reply("Hanya talent terdaftar yang bisa menggunakan fitur ini.")
         return 
 
-    is_admin = user_id in ADMINS
+    is_admin = is_admin_id(user_id)
     
     # 2. Validasi: Cek username
     if not user.username:

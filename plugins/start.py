@@ -22,6 +22,7 @@ from fsub.func import(
     decode,
     get_messages, 
     is_subscriber,
+    admin_filter,
 )
 
 from fsub.button import fsub_button, start_button
@@ -159,14 +160,14 @@ async def not_joined(client: Bot, message: Message):
     )
 
 
-@Bot.on_message(filters.command('users') & filters.private & filters.user(ADMINS))
+@Bot.on_message(filters.command('users') & filters.private & admin_filter)
 async def get_users(client: Bot, message: Message):
     msg = await client.send_message(message.chat.id, "Mengecek...")
     await msg.edit(f"{len(full_user())} Pengguna Bot")
 
 
 
-@Bot.on_message(filters.command("broadcast") & filters.user(ADMINS))
+@Bot.on_message(filters.command("broadcast") & admin_filter)
 async def send_text(client: Bot, message: Message):
     if message.reply_to_message:
         broadcast_msg = message.reply_to_message

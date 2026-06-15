@@ -48,6 +48,7 @@ class Data:
 /listsub: Lihat daftar force subscribe
 /setforce (teks): Ubah pesan force subscribe
 /setjoin (teks): Ubah teks tombol join
+/gitpull: Owner menerapkan perubahan terbaru dari repo
 """
     # ----------------------------------------
 
@@ -63,6 +64,14 @@ class Data:
     ]
 
     buttons = [
+        [
+            InlineKeyboardButton("Tentang", callback_data="about"),
+            InlineKeyboardButton("Tutup", callback_data="close")
+        ],
+    ]
+
+    admin_buttons = [
+        [InlineKeyboardButton("Git Pull", callback_data="gitpull")],
         [
             InlineKeyboardButton("Tentang", callback_data="about"),
             InlineKeyboardButton("Tutup", callback_data="close")
@@ -102,7 +111,7 @@ async def help(client: Bot, message: Message):
         message.chat.id, 
         text,
         disable_web_page_preview=True,
-        reply_markup=InlineKeyboardMarkup(Data.buttons),
+        reply_markup=InlineKeyboardMarkup(Data.admin_buttons if is_admin_id(message.from_user.id) else Data.buttons),
     )
 
 
@@ -128,10 +137,22 @@ async def handler(client: Bot, query: CallbackQuery):
             await query.message.edit_text(
                 text=text,
                 disable_web_page_preview=True,
-                reply_markup=InlineKeyboardMarkup(Data.buttons),
+                reply_markup=InlineKeyboardMarkup(Data.admin_buttons if is_admin_id(query.from_user.id) else Data.buttons),
             )
         except Exception:
             pass
+
+    elif data == "gitpull":
+        from fsub.func import is_owner_id
+        from plugins.admin import format_git_pull_result, run_git_pull
+
+        if not is_owner_id(query.from_user.id):
+            return await query.answer("Hanya owner yang dapat menjalankan git pull.", show_alert=True)
+
+        await query.answer("Menjalankan git pull...")
+        status_message = await query.message.reply("Menjalankan `git pull --ff-only`...")
+        returncode, output = await run_git_pull()
+        await status_message.edit_text(format_git_pull_result(returncode, output))
             
     elif data == "close":
         await query.message.delete()

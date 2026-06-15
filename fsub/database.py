@@ -10,7 +10,37 @@ talent_data = database['talents']
 coin_data = database['user_coins']
 vip_purchases = database['vip_purchases']
 admin_data = database['admins']
+dynamic_fsub_data = database['dynamic_fsubs']
+setting_data = database['settings']
 
+
+
+# --- Fungsi Force Subscribe Dinamis & Pengaturan ---
+
+def add_dynamic_fsub(chat_id: int):
+    result = dynamic_fsub_data.update_one(
+        {'_id': chat_id},
+        {'$set': {'_id': chat_id}},
+        upsert=True
+    )
+    return result.upserted_id is not None or result.modified_count > 0
+
+def del_dynamic_fsub(chat_id: int):
+    result = dynamic_fsub_data.delete_one({'_id': chat_id})
+    return result.deleted_count > 0
+
+def check_dynamic_fsub(chat_id: int):
+    return bool(dynamic_fsub_data.find_one({'_id': chat_id}))
+
+def full_dynamic_fsub():
+    return [doc['_id'] for doc in dynamic_fsub_data.find().sort('_id', 1)]
+
+def set_setting(key: str, value: str):
+    setting_data.update_one({'_id': key}, {'$set': {'value': value}}, upsert=True)
+
+def get_setting(key: str, default=None):
+    found = setting_data.find_one({'_id': key})
+    return found.get('value', default) if found else default
 
 # --- Fungsi Admin Dinamis ---
 

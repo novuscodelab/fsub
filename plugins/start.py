@@ -39,6 +39,20 @@ TIME_DURATION = (
 )
 
 
+def format_user_template(template, user):
+    values = {
+        "first": user.first_name,
+        "last": user.last_name,
+        "username": f"@{user.username}" if user.username else None,
+        "mention": user.mention,
+        "id": user.id,
+    }
+    try:
+        return template.format(**values)
+    except (KeyError, ValueError):
+        return template
+
+
 async def time_duration(seconds):
     if seconds == 0:
         return "inf"
@@ -128,15 +142,7 @@ async def start_command(client: Bot, message: Message):
     else:
         buttons = await start_button(client)
         await message.reply_text(
-            text=START_MESSAGE.format(
-                first=message.from_user.first_name,
-                last=message.from_user.last_name,
-                username=None 
-                if not message.from_user.username
-                else "@" + message.from_user.username,
-                mention=message.from_user.mention,
-                id=message.from_user.id,
-            ),
+            text=format_user_template(START_MESSAGE, message.from_user),
             reply_markup=InlineKeyboardMarkup(buttons),
             disable_web_page_preview=True,
             quote=True,
@@ -148,15 +154,7 @@ async def start_command(client: Bot, message: Message):
 async def not_joined(client: Bot, message: Message):
     buttons = await fsub_button(client, message)
     await message.reply(
-        text=with_credit(get_force_message_template().format(
-            first=message.from_user.first_name,
-            last=message.from_user.last_name,
-            username=f"@{message.from_user.username}"
-            if message.from_user.username
-            else None,
-            mention=message.from_user.mention,
-            id=message.from_user.id,
-        )),
+        text=with_credit(format_user_template(get_force_message_template(), message.from_user)),
         reply_markup=InlineKeyboardMarkup(buttons),
         quote=True,
         disable_web_page_preview=True,

@@ -56,7 +56,9 @@ async def add_admin_command(client: Bot, message: Message):
     except Exception as e:
         return await message.reply(f"Terjadi error saat mengambil data user: {e}")
 
-    add_admin(user_id)
+    if not add_admin(user_id):
+        return await message.reply("Gagal menyimpan admin ke database. Coba lagi nanti atau cek DATABASE_URL.")
+
     await message.reply(
         f"✅ Sukses! **{user.first_name}** (`{user_id}`) telah ditambahkan sebagai Admin."
     )
@@ -116,7 +118,8 @@ async def add_sub_command(client: Bot, message: Message):
 
     try:
         await client.get_chat(chat_id)
-        add_dynamic_fsub(chat_id)
+        if not add_dynamic_fsub(chat_id):
+            return await message.reply("Gagal menyimpan channel ke database. Coba lagi nanti atau cek DATABASE_URL.")
         await client.refresh_fsub_invite_links()
     except Exception as e:
         from fsub.database import del_dynamic_fsub
@@ -146,7 +149,12 @@ async def del_sub_command(client: Bot, message: Message):
         return await message.reply("Force subscribe wajib dari config.env tidak bisa dihapus lewat perintah. Hapus dari config.env jika ingin mengubahnya.")
 
     if del_dynamic_fsub(chat_id):
-        await client.refresh_fsub_invite_links()
+        try:
+            await client.refresh_fsub_invite_links()
+        except Exception as e:
+            return await message.reply(
+                f"Channel `{chat_id}` terhapus, tetapi refresh invite link gagal: {e}"
+            )
         return await message.reply(f"✅ Channel `{chat_id}` berhasil dihapus dari force subscribe tambahan.")
 
     await message.reply("Channel tersebut tidak ada di daftar force subscribe tambahan.")

@@ -6,16 +6,40 @@ from logging import basicConfig, INFO, WARNING, getLogger, Logger
 load_dotenv("config.env", override=True)
 
 
+def parse_int(value, default=0):
+    try:
+        return int(str(value).strip())
+    except (TypeError, ValueError):
+        return default
+
+
+def parse_bool(value, default=False):
+    if isinstance(value, bool):
+        return value
+    if value is None:
+        return default
+    return str(value).strip().lower() in {"1", "true", "yes", "on"}
+
+
+def parse_int_list(value):
+    ids = []
+    for item in str(value or "").replace(",", " ").split():
+        parsed = parse_int(item, None)
+        if parsed is not None:
+            ids.append(parsed)
+    return ids
+
+
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
-CHANNEL_DB = int(os.getenv("CHANNEL_DB"))
+CHANNEL_DB = parse_int(os.getenv("CHANNEL_DB"))
 DATABASE_URL = os.getenv("DATABASE_URL")
-DATABASE_NAME = os.getenv("DATABASE_NAME")
+DATABASE_NAME = os.getenv("DATABASE_NAME", "fsub_bot")
 
-RESTRICT = os.getenv("RESTRICT", True)
+RESTRICT = parse_bool(os.getenv("RESTRICT"), True)
 
 BUTTON_TITLE = os.getenv("BUTTON_TITLE", "ᴊᴏɪɴ")
-BUTTON_ROW = int(os.getenv("BUTTON_ROW", 2))
+BUTTON_ROW = max(1, parse_int(os.getenv("BUTTON_ROW", 2), 2))
 
 FORCE_SUB_ = {}
 FSUB_TOTAL = 1
@@ -24,7 +48,9 @@ while True:
     value = os.getenv(key)
     if value is None:
         break
-    FORCE_SUB_[FSUB_TOTAL] = int(value)
+    chat_id = parse_int(value, None)
+    if chat_id is not None:
+        FORCE_SUB_[FSUB_TOTAL] = chat_id
     FSUB_TOTAL += 1
 
 START_MESSAGE = os.getenv(
@@ -41,11 +67,11 @@ FORCE_MESSAGE = os.getenv(
     "\n\n"
     "Silakan Join Ke Channel dan Groupnya di Bawah Ini Terlebih Dahulu Yaa.",
     )
-ADMINS = [int(x) for x in (os.getenv("ADMINS", "").split()) if x]
-OWNERS = [int(x) for x in (os.getenv("OWNER", os.getenv("OWNERS", "")).split()) if x]
+ADMINS = parse_int_list(os.getenv("ADMINS", ""))
+OWNERS = parse_int_list(os.getenv("OWNER", os.getenv("OWNERS", "")))
     
 CUSTOM_CAPTION = os.getenv("CUSTOM_CAPTION", None)
-DISABLE_BUTTON = os.getenv("DISABLE_BUTTON", False)
+DISABLE_BUTTON = parse_bool(os.getenv("DISABLE_BUTTON"), False)
 
 
 basicConfig(level=INFO, format="[%(levelname)s] - %(message)s")

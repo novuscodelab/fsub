@@ -1,5 +1,8 @@
 import sys
-import uvloop
+try:
+    import uvloop
+except ImportError:
+    uvloop = None
 import asyncio
 from hydrogram import Client
 from fsub.config import (
@@ -10,7 +13,8 @@ from fsub.config import (
 from fsub.force import get_all_fsubs
 from fsub.credit import ensure_credit_integrity
 
-uvloop.install()
+if uvloop:
+    uvloop.install()
 
 
 class Bot(Client):
@@ -27,6 +31,7 @@ class Bot(Client):
 
 
     async def refresh_fsub_invite_links(self, exit_on_error: bool = False):
+        errors = []
         for key, channel_id in get_all_fsubs().items():
             try:
                 info = await self.get_chat(channel_id)
@@ -40,13 +45,17 @@ class Bot(Client):
                     f"  Chat ID: {info.id}\n\n"
                 )
             except Exception as e:
+                setattr(self, f"invitelink{key}", None)
+                errors.append(f"FORCE_SUB_{key} ({channel_id}): {e}")
                 self.LOGGER(__name__).error(e)
                 self.LOGGER(__name__).error(
                     f"Pastikan @{self.username} menjadi Admin di FORCE_SUB_{key} ({channel_id})\n\n"
                 )
-                if exit_on_error:
-                    sys.exit()
-                raise
+        if errors:
+            message = "\n".join(errors)
+            if exit_on_error:
+                sys.exit(message)
+            raise RuntimeError(message)
 
     async def start(self):
         ensure_credit_integrity()

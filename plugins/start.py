@@ -78,7 +78,10 @@ async def start_command(client: Bot, message: Message):
             base64_string = text.split(" ", 1)[1]
         except Exception:
             return
-        string = await decode(base64_string)
+        try:
+            string = await decode(base64_string)
+        except ValueError:
+            return await message.reply_text("Link tidak valid atau sudah rusak. Silakan minta link baru dari admin.")
         argument = string.split("-")
         if len(argument) == 3:
             try:
